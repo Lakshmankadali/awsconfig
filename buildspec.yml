@@ -1,6 +1,10 @@
-
 version: 0.2
 
+env:
+  parameter-store:
+    SONAR_TOKEN: "SonarQube_password"
+    SONAR_HOST_URL: "Sonar_URL"
+    
 phases:
   install:
     runtime-versions:
