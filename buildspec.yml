@@ -1,14 +1,21 @@
+
 version: 0.2
 
 env:
   parameter-store:
     SONAR_TOKEN: "SonarQube_password"
     SONAR_HOST_URL: "Sonar_URL"
-    
+
 phases:
   install:
     runtime-versions:
       nodejs: 20
+    commands:
+      - echo "Installing SonarScanner"
+      - curl -fsSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-8.1.0.6389-linux-x64.zip -o /tmp/sonar-scanner.zip
+      - unzip -q /tmp/sonar-scanner.zip -d /opt
+      - ln -sfn /opt/sonar-scanner-8.1.0.6389-linux-x64/bin/sonar-scanner /usr/local/bin/sonar-scanner
+      - sonar-scanner --version
 
   pre_build:
     commands:
@@ -16,6 +23,6 @@ phases:
 
   build:
     commands:
+      - cd "$CODEBUILD_SRC_DIR_foodzone" && sonar-scanner -Dsonar.projectKey=Lakshmankadali_FoodZone -Dsonar.organization=lakshmankadali-2 -Dsonar.sources=src -Dsonar.host.url="$SONAR_HOST_URL"
       - cd "$CODEBUILD_SRC_DIR_foodzone" && npm run build
       - echo "FoodZone build completed"
-
