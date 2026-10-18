@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies"
+
+  pre_build:
+    commands:
+      - npm ci
+
+  build:
+    commands:
+      - echo "Running lint checks"
+      - npm run lint
+      - echo "Building FoodZone"
+      - npm run build
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist
