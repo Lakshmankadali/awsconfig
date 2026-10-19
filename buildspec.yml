@@ -1,13 +1,11 @@
 version: 0.2
 
 env:
-  env:
   parameter-store:
     SONAR_TOKEN: "SonarQube_password"
     DOCKER_USERNAME: "/docker-credentials/username"
     DOCKER_PASSWORD: "/docker-credentials/password"
     DOCKER_URL: "/docker-registry/url"
-
 phases:
   install:
     runtime-versions:
