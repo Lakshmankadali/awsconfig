@@ -1,10 +1,12 @@
 version: 0.2
 
 env:
+  env:
   parameter-store:
     SONAR_TOKEN: "SonarQube_password"
-    DOCKER_USERNAME: "/docker-username"
-    DOCKER_PASSWORD: "/docker-password"
+    DOCKER_USERNAME: "/docker-credentials/username"
+    DOCKER_PASSWORD: "/docker-credentials/password"
+    DOCKER_URL: "/docker-registry/url"
 
 phases:
   install:
@@ -19,7 +21,7 @@ phases:
   pre_build:
     commands:
       - cd "$CODEBUILD_SRC_DIR_foodzone" && npm ci
-      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - echo "$DOCKER_PASSWORD" | docker login "$DOCKER_URL" -u "$DOCKER_USERNAME" --password-stdin
 
   build:
     commands:
