@@ -6,6 +6,7 @@ env:
     DOCKER_USERNAME: "/docker-credentials/username"
     DOCKER_PASSWORD: "/docker-credentials/password"
     DOCKER_URL: "/docker-registry/url"
+
 phases:
   install:
     runtime-versions:
@@ -18,25 +19,30 @@ phases:
 
   pre_build:
     commands:
-      - cd "$CODEBUILD_SRC_DIR_foodzone" && npm ci
+      - cd "$CODEBUILD_SRC_DIR_SourceArtifact" && npm ci
       - echo "$DOCKER_PASSWORD" | docker login "$DOCKER_URL" -u "$DOCKER_USERNAME" --password-stdin
 
   build:
     commands:
-      - cd "$CODEBUILD_SRC_DIR_foodzone" && sonar-scanner -Dsonar.projectKey=Lakshmankadali_FoodZone -Dsonar.organization=lakshmankadali-2 -Dsonar.sources=src
-      - cd "$CODEBUILD_SRC_DIR_foodzone" && npm run build
+      - cd "$CODEBUILD_SRC_DIR_SourceArtifact" && sonar-scanner -Dsonar.projectKey=Lakshmankadali_FoodZone -Dsonar.organization=lakshmankadali-2 -Dsonar.sources=src
+      - cd "$CODEBUILD_SRC_DIR_SourceArtifact" && npm run build
       - |
         set -e
 
+        if [ -z "${FOODZONE_COMMIT_SHA:-}" ]; then
+          echo "ERROR: FOODZONE_COMMIT_SHA was not provided by CodePipeline."
+          exit 1
+        fi
+
         BUILD_DATE=$(date -u +%Y%m%d-%H%M%S)
-        COMMIT_SHA=$(git -C "$CODEBUILD_SRC_DIR_foodzone" rev-parse --short=12 HEAD)
+        COMMIT_SHA="${FOODZONE_COMMIT_SHA:0:12}"
         IMAGE_TAG="${BUILD_DATE}-${COMMIT_SHA}"
         IMAGE_NAME="$DOCKER_USERNAME/foodzone"
 
         docker build \
           -f "$CODEBUILD_SRC_DIR/Dockerfile" \
           -t "$IMAGE_NAME:$IMAGE_TAG" \
-          "$CODEBUILD_SRC_DIR_foodzone"
+          "$CODEBUILD_SRC_DIR_SourceArtifact"
 
         docker push "$IMAGE_NAME:$IMAGE_TAG"
 
