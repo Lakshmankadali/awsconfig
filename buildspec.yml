@@ -1,9 +1,10 @@
-
 version: 0.2
 
 env:
   parameter-store:
     SONAR_TOKEN: "SonarQube_password"
+    DOCKER_USERNAME: "/docker-username"
+    DOCKER_PASSWORD: "/docker-password"
 
 phases:
   install:
@@ -18,9 +19,25 @@ phases:
   pre_build:
     commands:
       - cd "$CODEBUILD_SRC_DIR_foodzone" && npm ci
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
   build:
     commands:
       - cd "$CODEBUILD_SRC_DIR_foodzone" && sonar-scanner -Dsonar.projectKey=Lakshmankadali_FoodZone -Dsonar.organization=lakshmankadali-2 -Dsonar.sources=src
       - cd "$CODEBUILD_SRC_DIR_foodzone" && npm run build
-      - echo "FoodZone build completed"
+      - |
+        set -e
+
+        BUILD_DATE=$(date -u +%Y%m%d-%H%M%S)
+        COMMIT_SHA=$(git -C "$CODEBUILD_SRC_DIR_foodzone" rev-parse --short=12 HEAD)
+        IMAGE_TAG="${BUILD_DATE}-${COMMIT_SHA}"
+        IMAGE_NAME="$DOCKER_USERNAME/foodzone"
+
+        docker build \
+          -f "$CODEBUILD_SRC_DIR/Dockerfile" \
+          -t "$IMAGE_NAME:$IMAGE_TAG" \
+          "$CODEBUILD_SRC_DIR_foodzone"
+
+        docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+        echo "Published image: $IMAGE_NAME:$IMAGE_TAG"
